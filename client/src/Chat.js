@@ -5,6 +5,7 @@ import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import "react-chat-elements/dist/main.css";
+import Typography from '@mui/material/Typography';
 import {MessageList,ChatList,Popup} from "react-chat-elements";
 
 
@@ -97,6 +98,11 @@ function Chat(props) {
           </Grid>
 
           <Grid container item xs={10} direction="column">
+            <Typography variant="h3" gutterBottom>
+             Chat Up
+            </Typography>
+
+            <br></br>
             <MessageList
             className="messageList"
             lockable={true}
@@ -104,6 +110,7 @@ function Chat(props) {
             dataSource={messageList}
             />
 
+            <br></br>
           <Grid item>
             <div className="messageBox">
               <Stack direction="row" spacing={2}>
