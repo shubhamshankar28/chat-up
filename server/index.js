@@ -1,6 +1,17 @@
 const express = require("express");
 const { createServer } = require("http");
 const { Server } = require("socket.io");
+var mongoose = require('mongoose')
+
+var Message = mongoose.model('MessageType' , {
+  content:String,
+  sender:String,
+  senderName:String,
+  date:Date
+});
+
+
+var dbUrl = "mongodb+srv://shubham28:shubham28@cluster0.uo1zeww.mongodb.net/?retryWrites=true&w=majority";
 
 const app = express();
 const httpServer = createServer(app);
@@ -24,26 +35,39 @@ io.on("connection", (socket) => {
 
   
     //emit all users
-    const users = [];
-    for (let [id, socket] of io.of("/").sockets) {
-      users.push({
-        userID: id,
-        username: socket.username,
-      });
-    }
-    socket.emit("retrieve userlist",users);
+  const users = [];
+  for (let [id, socket] of io.of("/").sockets) {
+    users.push({
+      userID: id,
+      username: socket.username,
+    });
+  }
+  socket.emit("retrieve userlist",users);
 
   //emit a chat message to all users
   socket.on('chat message' , (msg) => {
-    io.emit('chat message', msg);
-    messageHistory.push(msg);
+    let newMessage = new Message(msg);
+  
+    newMessage.save()
+    .then(() => {
+      io.emit('chat message', msg);
+    })
+    .catch((err) => {
+      console.log("failed to save message");
+    })
+    // messageHistory.push(msg);
   });
 
   //notify existing users of a new addition
   socket.broadcast.emit("user connected" ,{userID:socket.id,username: socket.username});
 
 
-  socket.emit('fetch message history' , messageHistory);
+  Message.find({})
+  .then((docs) => {
+    socket.emit('fetch message history' , docs);
+  })
+  .catch((err) => {console.log(err)});
+
 
   socket.on('disconnect' , (reason) => {
     console.log('disconnect emitted ' + ' by ' + socket.username + ' ' + reason);
@@ -51,5 +75,10 @@ io.on("connection", (socket) => {
   });
 
 });
+
+mongoose.connect(dbUrl).catch((err) => {
+  console.log("catching the error ......")
+  console.log(err)
+})
 
 httpServer.listen(8000);
