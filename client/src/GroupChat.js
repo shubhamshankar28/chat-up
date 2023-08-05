@@ -12,56 +12,77 @@ function GroupChat(props) {
 
   useEffect(() => {
 
-        console.log(socket.id);
+        console.log('group chat component is being mounted');
 
-        socket.once('fetch message history' , (messageHistory) => {
-            const listed = [].concat(messageHistory.filter((msg) => {
-                return (msg.groupId === props.groupId)
-            }).map(
-              (msg) => {
-                  return {
-                  position:((msg.senderName === props.userName) ? "right" : "left"),
-                  type:"text",
-                  text:msg.content,
-                  title:msg.senderName,
-                  date:msg.date
+        fetch('http://localhost:8000/messages/' + props.groupId, {
+            method: "GET",
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+            },
+          })
+          .then((res) => {
+              return res.json();
+          })
+          .then((elem) => {
+              console.log(elem);
+              setMessageList([].concat(elem.map((msg) => {
+                return {
+                    position:((socket.id === msg.sender) ? "right" : "left"),
+                    type:"text",
+                    text:msg.content,
+                    title:msg.senderName,
+                    date:msg.date
                 };
-              }
-            ));
-            setMessageList(listed);
+              })));
+
+          })
+          .catch((err) => {
+            console.log(err);
           });
 
-        socket.once('receive-group-message ' + props.groupId , (msg) => {
+        socket.on('receive-group-message ' + props.groupId , (msg) => {
             console.log('in receive group message ' + props.groupId + ' ' + msg.groupId);
 
             if(props.groupId ===  msg.groupId) {
             console.log('in receive-group-message '  + props.groupId);
-            console.log(msg);
-            console.log('in update messageList ' + props.groupId);
-            const list = messageList.concat({
+            const message = {
               position:((socket.id === msg.sender) ? "right" : "left"),
               type:"text",
               text:msg.content,
               title:msg.senderName,
               date:msg.date
-            });
-            setMessageList(list);
+            };
+            // console.log(messageList);
+            setMessageList(list => [...list, message]);
         }
         });
+        console.log('logging : all event listeners');
+        console.log(socket.listeners('receive-group-message ' + props.groupId));
+
 
         return () => {
-            socket.removeListener('receive group message ' + props.groupId);
-            socket.removeListener('fetch message history');
+            console.log('group chat component is being unmounted');
+            socket.removeListener('receive-group-message ' + props.groupId);
           }
-    }, [messageList]);
+    }, []);
+
+    const getCurrentList = () => {
+        return messageList;
+    }
 
     const clickMessageHandler = (e) => {
+        console.log(socket._callbacks_);
+        // console.log('logging: active listeners in click message handle');
+        // console.log(socket.listeners('receive-group-message ' + props.groupId));
         console.log('sending message to ' + props.groupId);
         socket.emit('group-chat-message' , {content:message , sender:socket.id , senderName:props.userName , date:new Date(), groupId: props.groupId}); 
         setMessage('');
       };
 
     const changeNameHandler = (e) => {
+    // console.log('logging: active listeners in change name handler');
+    // console.log(socket.listeners('receive-group-message ' + props.groupId));
     setMessage(e.target.value);
     };
   return (

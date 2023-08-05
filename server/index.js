@@ -85,7 +85,8 @@ io.on("connection", (socket) => {
   //notify existing users of a new addition
   socket.broadcast.emit("user connected" ,{userID:socket.id,username: socket.username});
 
-
+  
+  console.log('emitting for socket-id : ' + socket.id)
   Message.find({})
   .then((docs) => {
     socket.emit('fetch message history' , docs);
@@ -114,6 +115,7 @@ io.on("connection", (socket) => {
 
     newMessage.save()
     .then(() => {
+      console.log('sending message to group : ' + msg.groupId);
       io.to(msg.groupId).emit('receive-group-message ' + msg.groupId , msg);
     })
     .catch((err) => {
@@ -138,10 +140,22 @@ app.get('/groups' , (request,response) => {
     console.log(groups);
     response.send(groups);
   })
-
 })
 
-app.post('/groups' , (req, res) => {
+
+app.get('/messages/:groupId' , (request,response) => {
+  console.log(request.params.groupId);
+  Message.find({groupId : request.params.groupId})
+  .catch((err) => {
+    console.log(err);
+  })
+  .then((messages) => {
+    console.log(messages);
+    response.send(messages);
+  })
+})
+
+app.post('/groups/:groupId' , (req, res) => {
     let newGroup = new Group(req.body);
     newGroup.save()
     .then(() => {
