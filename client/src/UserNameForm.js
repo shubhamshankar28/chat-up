@@ -14,7 +14,7 @@ const UserNameForm = (props) => {
         <div className="userNameForm">
             <h1>Chat Up</h1>
             <br></br>
-            <div class="center">
+            <div className="center">
                 <Stack direction="row" spacing={2}>
                     <TextField id="outlined-basic" label="Enter username" value={formValue} onChange = {(e) => setFormValue(e.target.value)}  />
                     <Button variant="contained" onClick = {submitHandler}>Enter</Button>

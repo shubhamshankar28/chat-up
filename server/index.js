@@ -11,7 +11,8 @@ var Message = mongoose.model('MessageType' , {
   sender:String,
   senderName:String,
   date:Date,
-  messageId:String
+  messageId:String,
+  groupId:String,
 });
 
 var Group = mongoose.model('GroupType' , {
@@ -97,6 +98,29 @@ io.on("connection", (socket) => {
     socket.broadcast.emit("user disconnected" , {userID:socket.id,username: socket.username});
   });
 
+
+  socket.on('group-chat-message' , (msg) => {
+    msg['messageId'] = null
+
+    let newMessage = Message(msg)
+
+    for (let [id, socketTemp] of io.of("/").sockets) {
+
+      if(msg.sender === socketTemp.id) {
+        console.log(socketTemp.id + ' is joining ' + msg.groupId);
+        socketTemp.join(msg.groupId);
+      }
+  }
+
+    newMessage.save()
+    .then(() => {
+      io.to(msg.groupId).emit('receive-group-message ' + msg.groupId , msg);
+    })
+    .catch((err) => {
+      console.log('group chat message failed ' + err)
+    })
+
+  })
 });
 
 mongoose.connect(dbUrl).catch((err) => {
