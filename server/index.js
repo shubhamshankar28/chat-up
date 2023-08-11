@@ -101,6 +101,8 @@ io.on("connection", (socket) => {
 
 
   socket.on('group-chat-message' , (msg) => {
+    console.log('in group-chat-message listener');
+    
     msg['messageId'] = null
 
     let newMessage = Message(msg)
@@ -150,12 +152,12 @@ app.get('/messages/:groupId' , (request,response) => {
     console.log(err);
   })
   .then((messages) => {
-    console.log(messages);
+    // console.log(messages);
     response.send(messages);
   })
 })
 
-app.post('/groups/:groupId' , (req, res) => {
+app.post('/groups' , (req, res) => {
     let newGroup = new Group(req.body);
     newGroup.save()
     .then(() => {
