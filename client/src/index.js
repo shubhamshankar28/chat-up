@@ -7,17 +7,20 @@ import GroupView from './GroupView';
 import UserNameForm from './UserNameForm';
 import CreateGroup from './CreateGroup';
 import GroupChat from './GroupChat';
+import 'react-chat-elements/dist/main.css'
 import {
   createBrowserRouter,
   RouterProvider,
 } from "react-router-dom";
 import {groupLoader} from './GroupView';
 import {groupChatLoader} from './GroupChat';
+import 'bootstrap/dist/css/bootstrap.min.css';
+
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <App />,
+    element: <UserNameForm />,
     errorElement: <ErrorPage />
   },
   {
@@ -48,6 +51,12 @@ root.render(
       rel="stylesheet"
       href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
     />
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM"
+    crossorigin="anonymous"
+  />
     <RouterProvider router={router} />
   </React.StrictMode>
 );

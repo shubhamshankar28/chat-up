@@ -1,6 +1,9 @@
 import './App.css';
-import GroupChat from './GroupChat.js';
-import {Link, useLoaderData,useLocation } from 'react-router-dom';
+import Grid from '@mui/material/Grid';
+import {useLoaderData,useLocation,useNavigate } from 'react-router-dom';
+import MyNavBar from './CustomNavbar';
+import { ChatItem } from 'react-chat-elements';
+
 export async function groupLoader() {
 
   try {
@@ -27,16 +30,41 @@ function GroupView(props) {
 
   const {groupList} = useLoaderData();
   const location= useLocation();
+  const navigate = useNavigate();
   const state=location.state;
+  const defaultAvatar = 'https://flxt.tmsimg.com/assets/p8553063_b_v13_ax.jpg';
   console.log(state);
 
   console.log(groupList);
+
+  const checkValidStringField = (query) => {
+    if(query == null) {
+      return false;
+    }
+    if(query.length === 0)
+      return false;
+    return true;
+  }
+
   return (
+
     <div className="GroupView">
-        <ol>
-            {groupList.map((obj, index) => <li key={index}><Link to={`/message/${obj.groupId}`} state={state}>{obj.groupId}</Link></li>)}
-        </ol>
-        <h1>Unimplemented</h1>
+
+      <MyNavBar state={{formValue:state['formValue']}}></MyNavBar>
+      
+        <Grid container spacing={4}>
+          {groupList.map((obj, index) => {
+            return <Grid item xs={12}>
+                    <ChatItem title={obj.groupId} 
+                    avatar = {checkValidStringField(obj.avatar) ? obj.avatar :defaultAvatar}
+                    subtitle={checkValidStringField(obj.purpose) ? obj.purpose : `Welcome to ${obj.groupId}`}
+                    onClick = {() => {
+                      navigate(`/message/${obj.groupId}`,{state:location.state})
+                    }} />
+                    </Grid>
+          })}
+        </Grid>
+
     </div>
   );
 }

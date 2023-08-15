@@ -4,9 +4,7 @@ const { Server } = require("socket.io");
 var bodyParser = require('body-parser')
 var mongoose = require('mongoose')
 
-
-
-var Message = mongoose.model('MessageType' , {
+ var Message = mongoose.model('MessageType' , {
   content:String,
   sender:String,
   senderName:String,
@@ -16,7 +14,9 @@ var Message = mongoose.model('MessageType' , {
 });
 
 var Group = mongoose.model('GroupType' , {
-  groupId : String
+  groupId : String,
+  purpose : String,
+  avatar : String
 });
 
 
@@ -157,19 +157,32 @@ app.get('/messages/:groupId' , (request,response) => {
   })
 })
 
-app.post('/groups' , (req, res) => {
-    let newGroup = new Group(req.body);
-    newGroup.save()
-    .then(() => {
-
-    })
-    .catch((err) => {
-      console.log(err)
-    })
-    
+app.post('/groups' , async (req, res) => {
     console.log(req.body);
+
+  try {
+      let currentGroups = await Group.find({groupId : req.body.groupId});
+
+      if(currentGroups.length > 0) {
+        res.status(400).send('group already exists');
+      }
+
+      else {
+        let newGroup = new Group(req.body);
+        let outcome = await newGroup.save();
+        res.sendStatus(200);
+      }
+  }
+  catch (error) {
+    console.log(error);
+  }
 })
 
 
 
-httpServer.listen(8000);
+httpServer.listen(8000, () => {
+
+});
+
+
+

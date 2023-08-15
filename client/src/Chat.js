@@ -1,6 +1,6 @@
 import socket from './socket.js';
 import {useEffect, useState} from 'react';
-import Grid from '@mui/material/Grid';
+
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
@@ -111,6 +111,8 @@ function Chat(props) {
             />
 
             <br></br>
+
+
           <Grid item>
             <div className="messageBox">
               <Stack direction="row" spacing={2}>

@@ -4,7 +4,11 @@ import socket from './socket.js';
 import TextField from '@mui/material/TextField';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
 import { useLoaderData, useLocation, useNavigate } from 'react-router-dom';
+import { MessageList } from 'react-chat-elements';
+import MyNavBar from './CustomNavbar';
+import { Container } from '@mui/material';
 
 export async function groupChatLoader({params}) {
   let groupId = params.groupId;
@@ -44,16 +48,23 @@ export async function groupChatLoader({params}) {
 function GroupChat(props) {
 
   const {groupChatList, groupId} = useLoaderData();
-  // console.log(groupChatList);
-  // console.log(groupId);
 
-  const [messageList, setMessageList] = useState(groupChatList);
-  const [message, setMessage] = useState('');
   const location = useLocation();
   const state=location.state;
 
+  const [messageList, setMessageList] = useState(amend(groupChatList));
+  const [message, setMessage] = useState('');
+
   const navigate = useNavigate();
   console.log(state);
+
+  function amend(groupChatList) {
+    return [].concat(groupChatList.map((msg) => {
+      let newMessage = msg;
+      newMessage['position'] = ((msg['title'] === state['formValue']) ? "right" : "left");
+      return newMessage;
+    }));
+  }
 
   
   if(state === null) {
@@ -63,7 +74,9 @@ function GroupChat(props) {
 
   useEffect(() => {
         console.log(state);
+        console.log(state['formValue']);
         if(state === null) {
+          console.log(state['formValue']);
           navigate('/user');
         }
 
@@ -93,7 +106,7 @@ function GroupChat(props) {
             if(groupId ===  msg.groupId) {
             console.log('in receive-group-message '  + groupId);
             const message = {
-              position:((socket.id === msg.sender) ? "right" : "left"),
+              position:((state['formValue'] === msg.senderName) ? "right" : "left"),
               type:"text",
               text:msg.content,
               title:msg.senderName,
@@ -113,42 +126,78 @@ function GroupChat(props) {
           }
     }, []);
 
-    const clickMessageHandler = (e) => {
+    const clickMessageHandler = (msg) => {
         console.log(socket._callbacks_);
         console.log('logging: active listeners in click message handle');
         console.log(socket.listeners('receive-group-message ' + groupId));
         console.log('sending message to ' + groupId);
-        socket.emit('group-chat-message' , {content:message , sender:socket.id , senderName:props.userName , date:new Date(), groupId: groupId}); 
-        setMessage('');
+        socket.emit('group-chat-message' , {content:message , sender:socket.id , senderName:state['formValue'] , date:new Date(), groupId: groupId}); 
       };
 
-    const changeNameHandler = (e) => {
-    // console.log('logging: active listeners in change name handler');
-    // console.log(socket.listeners('receive-group-message ' + groupId));
+    const changeMessageHandler = (e) => {
     setMessage(e.target.value);
     };
 
+
   return (
     <div className="GroupChat">
-        <ol>
-            {messageList.map((obj, index) => <li key={index}> Message 1  {obj.text} </li>)}
-        </ol>
 
-        <div className="messageBox">
-              <h1> This is {groupId} group!</h1>
-              <Stack direction="row" spacing={2}>
-                <div className="messageField">
-                  <TextField
-                  id="outlined-textarea"
-                  value={message}
-                  onChange={changeNameHandler}
-                  multiline
-                  fullWidth
+        <MyNavBar state={{formValue:state['formValue']}}></MyNavBar>
+        
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <Typography variant="h3" gutterBottom>
+            Welcome to {groupId}
+          </Typography>
+        </div>
+        
+
+        <div className="groupChatMessage">
+          <MessageList
+              className="messageList"
+              lockable={true}
+              toBottomHeight={"100%"}
+              dataSource={messageList}
+          />
+          <br/>
+        </div>
+
+        <br/>
+        <br/>
+
+        
+        <Container maxWidth="sm">
+                  {/* <TextField
+                    value={message}
+                    onChange={changeMessageHandler}
+                    variant="outlined"
+                    margin="normal"
+                    multiline
+                    fullWidth
+                    required
                   />
-                </div>
-                <Button variant="contained" onClick = {clickMessageHandler}>Enter</Button>
-              </Stack>
-            </div>
+                <Button variant="contained" color="primary" onClick = {clickMessageHandler}>Enter</Button>
+                 */}
+            {/* <Input
+              placeholder="Type your message..."
+              inputStyle = {inputStyle}
+              multiline={false}
+              onKeyPress={(event) => {
+                if (event.key === 'Enter') {
+                  clickMessageHandler(event.target.value);
+                  event.target.value = '';
+                }
+              }}
+            /> */}
+
+            <Stack direction="row" spacing={2}>
+                    <TextField id="outlined-basic" 
+                    label="Enter username" 
+                    value={message} 
+                    onChange = {changeMessageHandler} 
+                    fullWidth />
+                    <Button variant="contained" onClick = {clickMessageHandler}>Enter</Button>
+            </Stack>
+      </Container>
     </div>
   );
 }
