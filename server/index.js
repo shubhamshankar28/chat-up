@@ -20,7 +20,7 @@ var Group = mongoose.model('GroupType' , {
 });
 
 
-var dbUrl = "mongodb+srv://shubham28:shubham28@cluster0.uo1zeww.mongodb.net/?retryWrites=true&w=majority";
+var dbUrl = "<db-url>";
 
 const app = express();
 
