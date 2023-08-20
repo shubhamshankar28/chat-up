@@ -1,10 +1,11 @@
 import socket from './socket.js';
 import {useEffect, useState} from 'react';
-import Grid from '@mui/material/Grid';
+
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import "react-chat-elements/dist/main.css";
+import Typography from '@mui/material/Typography';
 import {MessageList,ChatList,Popup} from "react-chat-elements";
 
 
@@ -97,12 +98,20 @@ function Chat(props) {
           </Grid>
 
           <Grid container item xs={10} direction="column">
+            <Typography variant="h3" gutterBottom>
+             Chat Up
+            </Typography>
+
+            <br></br>
             <MessageList
             className="messageList"
             lockable={true}
             toBottomHeight={"100%"}
             dataSource={messageList}
             />
+
+            <br></br>
+
 
           <Grid item>
             <div className="messageBox">
