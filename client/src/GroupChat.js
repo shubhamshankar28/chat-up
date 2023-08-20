@@ -132,6 +132,7 @@ function GroupChat(props) {
         console.log(socket.listeners('receive-group-message ' + groupId));
         console.log('sending message to ' + groupId);
         socket.emit('group-chat-message' , {content:message , sender:socket.id , senderName:state['formValue'] , date:new Date(), groupId: groupId}); 
+        setMessage('');
       };
 
     const changeMessageHandler = (e) => {
@@ -191,7 +192,7 @@ function GroupChat(props) {
 
             <Stack direction="row" spacing={2}>
                     <TextField id="outlined-basic" 
-                    label="Enter username" 
+                    label="Enter message" 
                     value={message} 
                     onChange = {changeMessageHandler} 
                     fullWidth />
