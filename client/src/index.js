@@ -7,6 +7,7 @@ import GroupView from './GroupView';
 import UserNameForm from './UserNameForm';
 import CreateGroup from './CreateGroup';
 import GroupChat from './GroupChat';
+import SignUp from './SignUp';
 import 'react-chat-elements/dist/main.css'
 import {
   createBrowserRouter,
@@ -20,7 +21,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <UserNameForm />,
+    element: <SignUp />,
     errorElement: <ErrorPage />
   },
   {

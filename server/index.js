@@ -1,10 +1,17 @@
 const express = require("express");
 const { createServer } = require("http");
 const { Server } = require("socket.io");
+const {dbUrl} = require("./secretKey.js");
 var bodyParser = require('body-parser')
 var mongoose = require('mongoose')
+const bcrypt = require('bcrypt-nodejs');
 
- var Message = mongoose.model('MessageType' , {
+var User = mongoose.model('UserType' , {
+  username : String,
+  password : String
+});
+
+var Message = mongoose.model('MessageType' , {
   content:String,
   sender:String,
   senderName:String,
@@ -20,7 +27,9 @@ var Group = mongoose.model('GroupType' , {
 });
 
 
-var dbUrl = "<db-url>";
+var databaseUrl = dbUrl;
+console.log(databaseUrl);
+
 
 const app = express();
 
@@ -127,7 +136,7 @@ io.on("connection", (socket) => {
   })
 });
 
-mongoose.connect(dbUrl).catch((err) => {
+mongoose.connect(databaseUrl).catch((err) => {
   console.log("catching the error ......")
   console.log(err)
 });
@@ -156,6 +165,36 @@ app.get('/messages/:groupId' , (request,response) => {
     response.send(messages);
   })
 })
+
+app.post('/signup' ,  (req, res) => {
+  const credentials = req.body;
+
+  console.log(credentials);
+  bcrypt.genSalt(10 , (err, salt) => {
+    if(err) {
+      console.log('error in generating salt: ' + err);
+      return;
+    }
+
+    bcrypt.hash(credentials.password, salt, null, (error, hashedPassword) => {
+      
+      if(error) {
+        console.log('error in generating hash: ' + error);
+        return;
+      }
+
+      const finalCredentials = {'username' : credentials.username, 'password' : hashedPassword};
+      var newPassword = User(finalCredentials);
+      newPassword.save()
+      .catch((err) => {
+        console.log(err)
+      })
+      .then(() => {
+        res.sendStatus(200)
+      });
+    });
+  })
+});
 
 app.post('/groups' , async (req, res) => {
     console.log(req.body);

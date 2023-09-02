@@ -8,7 +8,7 @@ import {Link, useNavigate} from 'react-router-dom';
 import Typography from '@mui/material/Typography';
 
 
-const UserNameForm = (props) => {
+const SignUp = (props) => {
 
     const [formValue,setFormValue] = useState('');
     const [password,setPassword] = useState('');
@@ -17,8 +17,9 @@ const UserNameForm = (props) => {
 
 
     const submitHandler = async (e) => {
-        e.preventDefault();
+
         try {
+            console.log('beginning post');
             let result =  await fetch('http://localhost:8000/signup', {
               method: "POST",
               body: JSON.stringify({"username" : formValue, "password":password}),
@@ -28,7 +29,8 @@ const UserNameForm = (props) => {
               },
             });
 
-            navigate('/view-group' , {state:{formValue:formValue}});
+            console.log('navigating');
+            navigate('/user');
             console.log(result);
           }
           catch(error) {
@@ -40,12 +42,12 @@ const UserNameForm = (props) => {
     return (  
         <div className="random">
 
-            <MyNavBar state={{formValue}}></MyNavBar>
+            <MyNavBar></MyNavBar>
 
             <Container maxWidth="sm">
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <Typography variant="h3" gutterBottom>
-            Welcome to Chat App!!
+            Welcome to Chat App
           </Typography>
         </div>
 
@@ -63,4 +65,4 @@ const UserNameForm = (props) => {
     );
 }
  
-export default UserNameForm;
+export default SignUp;

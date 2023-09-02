@@ -2,3 +2,5 @@ node_modules
 server/cleanup.js
 todo
 ProjectDescription.txt
+server/secretKey.js
+client/src/secretKey.js
