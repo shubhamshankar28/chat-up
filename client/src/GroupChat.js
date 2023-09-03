@@ -58,6 +58,8 @@ function GroupChat(props) {
   const navigate = useNavigate();
   console.log(state);
 
+
+
   function amend(groupChatList) {
     return [].concat(groupChatList.map((msg) => {
       let newMessage = msg;
@@ -80,6 +82,10 @@ function GroupChat(props) {
           navigate('/user');
         }
 
+        const userName = sessionStorage.getItem('token');
+        if(userName === null) {
+          navigate('/user');
+        }
 
         console.log(state['formValue']);
         console.log(state);
@@ -143,7 +149,7 @@ function GroupChat(props) {
   return (
     <div className="GroupChat">
 
-        <MyNavBar state={{formValue:state['formValue']}}></MyNavBar>
+        <MyNavBar state={{formValue:state?.formValue}}></MyNavBar>
         
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <Typography variant="h3" gutterBottom>
@@ -167,29 +173,6 @@ function GroupChat(props) {
 
         
         <Container maxWidth="sm">
-                  {/* <TextField
-                    value={message}
-                    onChange={changeMessageHandler}
-                    variant="outlined"
-                    margin="normal"
-                    multiline
-                    fullWidth
-                    required
-                  />
-                <Button variant="contained" color="primary" onClick = {clickMessageHandler}>Enter</Button>
-                 */}
-            {/* <Input
-              placeholder="Type your message..."
-              inputStyle = {inputStyle}
-              multiline={false}
-              onKeyPress={(event) => {
-                if (event.key === 'Enter') {
-                  clickMessageHandler(event.target.value);
-                  event.target.value = '';
-                }
-              }}
-            /> */}
-
             <Stack direction="row" spacing={2}>
                     <TextField id="outlined-basic" 
                     label="Enter message" 

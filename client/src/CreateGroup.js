@@ -1,5 +1,5 @@
 import './App.css';
-import {useState} from 'react';
+import {useState, useEffect} from 'react';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
@@ -30,6 +30,13 @@ function CreateGroup() {
   const navigate = useNavigate();
   const location = useLocation();
   const state=location.state;
+
+  useEffect(() => {
+    const userName = sessionStorage.getItem('token');
+    if(userName === null) {
+      navigate('/user');
+    }
+  })
 
   const handleSubmit = async (e) => {
 

@@ -1,10 +1,14 @@
 import './App.css';
 import Grid from '@mui/material/Grid';
 import {useLoaderData,useLocation,useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import MyNavBar from './CustomNavbar';
 import { ChatItem } from 'react-chat-elements';
 
+
+
 export async function groupLoader() {
+  console.log('in group loader');
 
   try {
   let response =   await fetch('http://localhost:8000/groups', {
@@ -14,8 +18,8 @@ export async function groupLoader() {
       'Content-Type': 'application/json',
     },
   });
-
   let groupList = await response.json();
+  console.log('fetched ' + groupList.length + ' messages')
   return {groupList};
   }
   catch(err) {
@@ -33,8 +37,19 @@ function GroupView(props) {
   const navigate = useNavigate();
   const state=location.state;
   const defaultAvatar = 'https://flxt.tmsimg.com/assets/p8553063_b_v13_ax.jpg';
-  console.log(state);
+  
+  useEffect(() => {
+    const userName = sessionStorage.getItem('token');
+    console.log('logging username from sessionStorage : ');
+    console.log(userName);
 
+    if(!userName) {
+      navigate('/user');
+    }
+  })
+
+  
+  console.log(state);
   console.log(groupList);
 
   const checkValidStringField = (query) => {

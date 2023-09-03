@@ -12,6 +12,7 @@ const UserNameForm = (props) => {
 
     const [formValue,setFormValue] = useState('');
     const [password,setPassword] = useState('');
+    const [tokenVal, setTokenVal] = useState('');
 
     const navigate = useNavigate();
 
@@ -19,7 +20,7 @@ const UserNameForm = (props) => {
     const submitHandler = async (e) => {
         e.preventDefault();
         try {
-            let result =  await fetch('http://localhost:8000/signup', {
+            let result =  await fetch('http://localhost:8000/login', {
               method: "POST",
               body: JSON.stringify({"username" : formValue, "password":password}),
               headers: {
@@ -28,8 +29,10 @@ const UserNameForm = (props) => {
               },
             });
 
+            const parsedResult = await result.json();
+            sessionStorage.setItem('token' , parsedResult['token']);
             navigate('/view-group' , {state:{formValue:formValue}});
-            console.log(result);
+            console.log(parsedResult);
           }
           catch(error) {
           console.log(error);

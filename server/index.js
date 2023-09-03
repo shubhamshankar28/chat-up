@@ -196,6 +196,39 @@ app.post('/signup' ,  (req, res) => {
   })
 });
 
+
+app.post('/login' , (req,res) => {
+  console.log('login called');
+  const credentials = req.body;
+  console.log(credentials);
+  const curUsername = credentials.username;
+
+  User.findOne({username : curUsername})
+  .then((user) => {
+    if(user === null) {
+      console.log('user not found');
+      res.sendStatus(400);
+    }
+    else {
+       console.log('printing user details');
+       console.log(user);
+       const curPassword = user['password'];
+       bcrypt.compare(credentials.password, curPassword, (err, result) => {
+        if(err) {
+          console.log('encountered error : ' + err + ' while comparing password');
+          res.sendStatus(400);
+        }
+        else {
+          res.status(200).send({token : credentials.username});
+        }
+       });
+    }
+  }).catch((err) => {
+    console.log('error while finding user : ' + err);
+  })
+
+});
+
 app.post('/groups' , async (req, res) => {
     console.log(req.body);
 
@@ -216,6 +249,8 @@ app.post('/groups' , async (req, res) => {
     console.log(error);
   }
 })
+
+
 
 
 

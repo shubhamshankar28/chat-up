@@ -2,8 +2,6 @@ import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 import {Link} from 'react-router-dom';
 const MyNavBar = (props) => {
-  console.log('hi ')
-  console.log(props.state);
   return (
     <div className='randoms'>
       <Navbar bg="dark" data-bs-theme="dark">
