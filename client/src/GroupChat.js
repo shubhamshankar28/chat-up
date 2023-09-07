@@ -11,11 +11,26 @@ import MyNavBar from './CustomNavbar';
 import { Container } from '@mui/material';
 
 export async function groupChatLoader({params}) {
+  
+  
   let groupId = params.groupId;
   console.log(groupId);
 
+  const userName = sessionStorage.getItem('token');
+  if((userName === null)) {
+    return;
+  }
+
   try {
-    let response =  await fetch('http://localhost:8000/messages/' + params.groupId, {
+    let response =  await fetch('http://localhost:8000/messages/' + params.groupId + '/' + userName, {
+      method: "GET",
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+    });
+
+    let adminStatus = await fetch('http://localhost:8000/checkAdminRights/' + params.groupId + '/' + userName, {
       method: "GET",
       headers: {
         'Accept': 'application/json',
@@ -25,6 +40,15 @@ export async function groupChatLoader({params}) {
 
   
     let groupChatRaw = await response.json();
+    let adminStatusRaw = await adminStatus.json();
+
+
+    console.log(groupChatRaw);
+    console.log(adminStatusRaw);
+    if(('status' in groupChatRaw) && (groupChatRaw['status'] === 'user is not a member of group')) {
+      return {groupChatList : [] , groupId, status : '400', adminStatusRaw}
+    }
+
     let groupChatList = groupChatRaw.map((msg) => {
       return {
         position:((socket.id === msg.sender) ? "right" : "left"),
@@ -35,30 +59,30 @@ export async function groupChatLoader({params}) {
       }
     });
 
-
-    return {groupChatList, groupId};
+    return {groupChatList, groupId, status : '200', adminStatus:adminStatusRaw['adminStatus']};
     }
     catch(err) {
       console.log(err);
       let groupChatList = [];
-      return {groupChatList, groupId};
+      return {groupChatList, groupId , status : '200', adminStatus:false};
     }
 }
 
 function GroupChat(props) {
 
-  const {groupChatList, groupId} = useLoaderData();
+  const {groupChatList, groupId,status, adminStatus} = useLoaderData();
 
+  console.log(adminStatus)
   const location = useLocation();
   const state=location.state;
 
   const [messageList, setMessageList] = useState(amend(groupChatList));
   const [message, setMessage] = useState('');
+  const [isMember, setIsMember] = useState(false);
 
   const navigate = useNavigate();
+
   console.log(state);
-
-
 
   function amend(groupChatList) {
     return [].concat(groupChatList.map((msg) => {
@@ -73,8 +97,14 @@ function GroupChat(props) {
 
     navigate('/user');
   }
-
+  
   useEffect(() => {
+
+        if(status === '400') {
+          setIsMember(false);
+          return;
+        }
+        setIsMember(true);
         console.log(state);
         console.log(state['formValue']);
         if(state === null) {
@@ -82,10 +112,11 @@ function GroupChat(props) {
           navigate('/user');
         }
 
-        const userName = sessionStorage.getItem('token');
+        let userName = sessionStorage.getItem('token');
         if(userName === null) {
           navigate('/user');
         }
+
 
         console.log(state['formValue']);
         console.log(state);
@@ -141,6 +172,25 @@ function GroupChat(props) {
         setMessage('');
       };
 
+    const clickMembershipHandler = async () => {
+      let userName = sessionStorage.getItem('token');
+      console.log('proposing membership');
+      console.log(userName);
+      console.log(groupId);
+      let result = await fetch('http://localhost:8000/proposeMembership', {
+        method: "POST",
+        body: JSON.stringify({"username" : userName , "groupId" : groupId}),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      });
+      console.log('fetch status is : ');
+      console.log(result);
+      
+      navigate('/view-group' , {state:{formValue:userName}});
+    };
+
     const changeMessageHandler = (e) => {
     setMessage(e.target.value);
     };
@@ -149,7 +199,7 @@ function GroupChat(props) {
   return (
     <div className="GroupChat">
 
-        <MyNavBar state={{formValue:state?.formValue}}></MyNavBar>
+        <MyNavBar state={{formValue:state?.formValue, isAdmin:adminStatus, groupId}}></MyNavBar>
         
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <Typography variant="h3" gutterBottom>
@@ -157,8 +207,23 @@ function GroupChat(props) {
           </Typography>
         </div>
         
+        <br/>
+        <br/>
 
-        <div className="groupChatMessage">
+        {!isMember && 
+            <div className="userNotFound">
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                <Typography variant="h4" gutterBottom>
+                  You are not a member of {groupId}
+                </Typography>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                <Button variant="contained" onClick = {clickMembershipHandler}>Propose Membership</Button>
+              </div>
+            </div>
+        }
+
+        {isMember && <div className="groupChatMessage">
           <MessageList
               className="messageList"
               lockable={true}
@@ -166,13 +231,13 @@ function GroupChat(props) {
               dataSource={messageList}
           />
           <br/>
-        </div>
+        </div> }
 
-        <br/>
-        <br/>
+        {isMember && <br/>}
+        {isMember && <br/>}
 
         
-        <Container maxWidth="sm">
+        {isMember && <Container maxWidth="sm">
             <Stack direction="row" spacing={2}>
                     <TextField id="outlined-basic" 
                     label="Enter message" 
@@ -182,6 +247,7 @@ function GroupChat(props) {
                     <Button variant="contained" onClick = {clickMessageHandler}>Enter</Button>
             </Stack>
       </Container>
+        } 
     </div>
   );
 }

@@ -52,6 +52,12 @@ const UserNameForm = (props) => {
           </Typography>
         </div>
 
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <Typography variant="h5" gutterBottom>
+            Login
+          </Typography>
+        </div>
+
         <br/>
         <br/>
             

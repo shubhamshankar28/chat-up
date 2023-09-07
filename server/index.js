@@ -26,6 +26,21 @@ var Group = mongoose.model('GroupType' , {
   avatar : String
 });
 
+var Admin = mongoose.model('AdminType' , {
+  groupId : String,
+  username: String
+});
+
+var Member = mongoose.model('MemberType' , {
+  groupId : String,
+  username : String
+});
+
+var MembershipRequest = mongoose.model('MembershipRequestType' , {
+  groupId : String,
+  username : String
+})
+
 
 var databaseUrl = dbUrl;
 console.log(databaseUrl);
@@ -148,23 +163,157 @@ app.get('/groups' , (request,response) => {
     console.log(err);
   })
   .then((groups) => {
-    console.log(groups);
+    // console.log(groups);
     response.send(groups);
   })
 })
 
 
-app.get('/messages/:groupId' , (request,response) => {
+app.get('/viewMembershipRequests/:groupId' , async (request, response) => {
+  console.log('in /viewMembershipRequest :');
+  console.log(request.params);
+  const groupId = request.params.groupId;
+ 
+  try {
+    const newMembershipRequests = await MembershipRequest.find({groupId: groupId});
+    return response.send(newMembershipRequests);
+  }
+  catch (error) {
+    console.log('error in /viewMembership:');
+    console.log(error); 
+    return response.send([]);
+  }
+});
+
+
+app.get('/grantMembership/:groupId/:userId' , async (request, response) => {
+  console.log('in /grantMembership :');
   console.log(request.params.groupId);
-  Message.find({groupId : request.params.groupId})
+  console.log(request.params.userId);
+  
+  const username = request.params.userId;
+  const groupId = request.params.groupId;
+
+  const newMember = Member({username,groupId});
+  try {
+    await MembershipRequest.deleteMany({username,groupId});
+    await newMember.save();
+    let remainingMemberships = await MembershipRequest.find({groupId});
+    response.send(remainingMemberships);
+  }
+  catch (error) {
+    console.log('error in /grantMembership:');
+    console.log(error);
+    response.send([]);
+  }
+});
+
+
+
+app.post('/proposeMembership', async (request,response) => {
+  console.log('proposing membership :');
+  const membership = request.body;
+  console.log(membership);
+  const newMembershipRequest = MembershipRequest(membership);
+  try {
+    let result = await newMembershipRequest.save();
+    response.sendStatus(200);
+  } 
+  catch (err) {
+    console.log('error in proposing membership: ');
+    console.log(err);
+    response.sendStatus(400);
+  }
+});
+
+
+app.get('/checkAdminRights/:groupId/:userId' , (request,response) => {
+  console.log('in /checkAdminRights :');
+  console.log(request.params.groupId);
+  console.log(request.params.userId);
+
+  Admin.find({groupId : request.params.groupId, username: request.params.userId})
   .catch((err) => {
     console.log(err);
   })
-  .then((messages) => {
-    // console.log(messages);
-    response.send(messages);
+  .then((doc) => {
+    if(doc.length === 0) {
+      response.send({'adminStatus' : false});
+    }
+    else {
+      response.send({'adminStatus' : true});
+    }
+  });
+});
+
+app.get('/retrieveMembers/:groupId' , async (request,response) => {
+  console.log('in /retrieveMembers/' + request.params.groupId);
+  try {
+    const members = await Member.find({groupId: request.params.groupId});
+    const admins = await Admin.find({groupId: request.params.groupId});
+    const finalMembers = members.filter((obj) => {
+      for(let i=0; i<admins.length; ++i) {
+        let admin = admins[i];
+        console.log(admin.username);
+        console.log(obj.username);
+        if(obj.username === admin.username)
+          return false;
+      }
+      return true;
+    })
+    response.send(finalMembers);
+  }
+  catch (error) {
+    console.log('encountered error :');
+    console.log(error);
+    response.send([]);
+  }
+});
+
+app.post('/grantAdminRights/:groupId/:userId' , async (request,response) => {
+  console.log('in /grantAdminRights');
+  console.log(request.params.groupId);
+  console.log(request.params.userId);
+
+  try {
+    const newAdmin = Admin({groupId:request.params.groupId,username:request.params.userId});
+    await newAdmin.save();
+    response.sendStatus(200);
+  }
+  catch (error) {
+    console.log('encountered error :');
+    console.log(error);
+    response.sendStatus(400);
+  }
+
+});
+
+app.get('/messages/:groupId/:userId' , (request,response) => {
+  console.log('in /messages :');
+  console.log(request.params.groupId);
+  console.log(request.params.userId);
+
+  Member.find({groupId : request.params.groupId, username: request.params.userId})
+  .catch((err) => {
+    console.log(err);
   })
-})
+  .then((doc) => {
+    if(doc.length === 0) {
+      response.send({'status' : 'user is not a member of group'});
+    }
+
+    else {
+      Message.find({groupId : request.params.groupId})
+      .catch((err) => {
+        console.log(err);
+      })
+      .then((messages) => {
+        // console.log(messages);
+        response.send(messages);
+      });
+    }
+  });
+});
 
 app.post('/signup' ,  (req, res) => {
   const credentials = req.body;

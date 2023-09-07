@@ -48,8 +48,20 @@ const SignUp = (props) => {
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <Typography variant="h3" gutterBottom>
             Welcome to Chat App
+            <br/>
           </Typography>
+          
         </div>
+
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <Typography variant="h5" gutterBottom>
+            Sign Up
+            <br/>
+          </Typography>
+          
+        </div>
+
+
 
         <br/>
         <br/>

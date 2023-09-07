@@ -42,6 +42,8 @@ function CreateGroup() {
 
       console.log("handling submit");
       try {
+      
+      // Create new group.
       let result =  await fetch('http://localhost:8000/groups', {
         method: "POST",
         body: JSON.stringify({"groupId" : dictionary.groupName, "avatar":dictionary.avatar, "purpose":dictionary.purpose}),
@@ -51,6 +53,25 @@ function CreateGroup() {
         },
       });
       console.log(result);
+      
+      // Grant current user admin rights to the new group.
+      let _ = await fetch('http://localhost:8000/grantAdminRights/' + dictionary.groupName + '/' + sessionStorage.getItem('token') , {
+        method: "POST",
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      });
+
+      // Grant current user membership to the new group.
+      _ = await fetch('http://localhost:8000/grantMembership/' + dictionary.groupName + '/' + sessionStorage.getItem('token') , {
+        method: "GET",
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      });
+
       navigate('/view-group' , {state:location.state} )
     }
     catch(error) {
