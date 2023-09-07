@@ -1,11 +1,10 @@
 import './App.css';
 import Grid from '@mui/material/Grid';
 import {useLoaderData,useLocation,useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import MyNavBar from './CustomNavbar';
 import { ChatItem } from 'react-chat-elements';
-
-
+import socket from './socket.js';
 
 export async function groupLoader() {
   console.log('in group loader');
@@ -33,12 +32,15 @@ function GroupView(props) {
 
 
   const {groupList} = useLoaderData();
+  const [groups,setGroups] = useState(groupList);
   const location= useLocation();
   const navigate = useNavigate();
   const state=location.state;
   const defaultAvatar = 'https://flxt.tmsimg.com/assets/p8553063_b_v13_ax.jpg';
   
   useEffect(() => {
+    const d = new Date();
+    console.log(d + ': mounting view-group component');
     const userName = sessionStorage.getItem('token');
     console.log('logging username from sessionStorage : ');
     console.log(userName);
@@ -46,9 +48,26 @@ function GroupView(props) {
     if(!userName) {
       navigate('/user');
     }
-  })
 
-  
+
+    socket.on('new-group-added' , (newGroup) => {
+      console.log('call back for new-group added fired');
+      console.log(newGroup);
+      setGroups((previousGroups) => {
+        return [...previousGroups, newGroup];
+      });
+    });
+
+    console.log(d + ': logging : all event listeners');
+    console.log(socket.listeners('new-group-added'));
+
+    return () => {
+      const d = new Date();
+      console.log(d + ': view group component is going to be unmounted');
+      socket.removeAllListeners('new-group-added');
+    }
+  } , []);
+
   console.log(state);
   console.log(groupList);
 
@@ -68,7 +87,7 @@ function GroupView(props) {
       <MyNavBar state={{formValue:state['formValue']}}></MyNavBar>
       
         <Grid container spacing={4}>
-          {groupList.map((obj, index) => {
+          {groups.map((obj, index) => {
             return <Grid item xs={12}>
                     <ChatItem title={obj.groupId} 
                     avatar = {checkValidStringField(obj.avatar) ? obj.avatar :defaultAvatar}

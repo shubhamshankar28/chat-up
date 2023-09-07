@@ -79,45 +79,6 @@ const messageHistory = []
 io.on("connection", (socket) => {
   console.log(socket.id);
 
-  
-    //emit all users
-  const users = [];
-  for (let [id, socket] of io.of("/").sockets) {
-    users.push({
-      userID: id,
-      username: socket.username,
-    });
-  }
-
-  socket.emit("retrieve userlist",users);
-
-  //emit a chat message to all users
-  socket.on('chat message' , (msg) => {
-    msg['messageId'] = null;
-    let newMessage = new Message(msg);
-  
-    newMessage.save()
-    .then(() => {
-      io.emit('chat message', msg);
-    })
-    .catch((err) => {
-      console.log("failed to save message");
-    })
-    // messageHistory.push(msg);
-  });
-
-  //notify existing users of a new addition
-  socket.broadcast.emit("user connected" ,{userID:socket.id,username: socket.username});
-
-  
-  console.log('emitting for socket-id : ' + socket.id)
-  Message.find({})
-  .then((docs) => {
-    socket.emit('fetch message history' , docs);
-  })
-  .catch((err) => {console.log(err)});
-
-
   socket.on('disconnect' , (reason) => {
     console.log('disconnect emitted ' + ' by ' + socket.username + ' ' + reason);
     socket.broadcast.emit("user disconnected" , {userID:socket.id,username: socket.username});
@@ -391,17 +352,21 @@ app.post('/groups' , async (req, res) => {
       else {
         let newGroup = new Group(req.body);
         let outcome = await newGroup.save();
+
+        for (let [id, socketTemp] of io.of("/").sockets) {
+            console.log('socket defined for : ' + socketTemp.id);
+        }
+
+        console.log('emitting new group added');
+        io.emit('new-group-added' , req.body);
         res.sendStatus(200);
       }
   }
   catch (error) {
-    console.log(error);
+    res.sendStatus(400);
+    console.log(err);
   }
-})
-
-
-
-
+});
 
 httpServer.listen(8000, () => {
 
