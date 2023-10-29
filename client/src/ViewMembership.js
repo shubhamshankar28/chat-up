@@ -10,6 +10,7 @@ import { MessageList } from 'react-chat-elements';
 import MyNavBar from './CustomNavbar';
 import { Container } from '@mui/material';
 import Grid from '@mui/material/Grid';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
 
 export async function membershipLoader({params}) {
   
@@ -111,14 +112,52 @@ function ViewMembership(props) {
         
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <Typography variant="h3" gutterBottom>
-            View Membership requests for {groupId}
+            Membership Requests for {groupId}
           </Typography>
         </div>
         
         <br/>
         <br/>
 
-        <Grid container spacing={4}>
+
+        <TableContainer component={Paper}>
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell>Name</TableCell>
+            <TableCell>Access Type</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {membershipList.map((row,index) => (
+            <TableRow key={index}>
+              <TableCell>{row?.username}</TableCell>
+              <TableCell> <Button variant="contained" onClick = {() => {
+                clickAcceptRequestHandler(row?.username);
+            }}>
+              User
+              </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+
+        {existingMembersList.map((row,index) => (
+                    <TableRow key={index}>
+                      <TableCell>{row?.username}</TableCell>
+                      <TableCell> <Button variant="contained" onClick = {() => {
+                        clickGrantAdminRightsHandler(row?.username);
+                    }}>
+                      Admin
+                      </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+
+        </TableBody>
+      </Table>
+    </TableContainer>
+
+        {/* <Grid container spacing={4}>
           {membershipList.map((obj, index) => {
             return <Grid item xs={12}>
         <div key={index} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -142,7 +181,7 @@ function ViewMembership(props) {
         </div>
             </Grid>
           })}
-        </Grid>
+        </Grid> */}
 
     </div>
   );

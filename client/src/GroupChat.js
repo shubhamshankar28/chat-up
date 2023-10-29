@@ -79,6 +79,7 @@ function GroupChat(props) {
   const [messageList, setMessageList] = useState(amend(groupChatList));
   const [message, setMessage] = useState('');
   const [isMember, setIsMember] = useState(false);
+  const [currentAdminStatus, setCurrentAdminStatus] = useState(adminStatus);
 
   const navigate = useNavigate();
 
@@ -99,6 +100,9 @@ function GroupChat(props) {
   }
   
   useEffect(() => {
+
+    const d = new Date();
+    console.log(d + ': mounting group-chat component');
 
         if(status === '400') {
           setIsMember(false);
@@ -121,11 +125,12 @@ function GroupChat(props) {
         console.log(state['formValue']);
         console.log(state);
 
-        socket.auth = {username:state['formValue']};
-        socket.connect();
-      
 
-        console.log('connecting with username '+ socket.auth.username);
+        if(!socket.connected) {
+          socket.auth = {username:userName};
+          socket.connect();
+          console.log('connecting with username '+ socket.auth.username);
+        }
 
         socket.on("connect_error", (err) => {
           if (err.message === "invalid username") {
@@ -133,9 +138,18 @@ function GroupChat(props) {
           }
         });
 
-        socket.on("disconnect" , (reason) => {
-            console.log(reason);
+        socket.on("membership-approved" , (_) => {
+          setIsMember(true);
         });
+
+        socket.on("admin-status-granted" , (_) => {
+          setCurrentAdminStatus(true);
+        })
+
+        socket.on("disconnect" , (reason) => {
+            console.log("socket connection has been disconnected on the client side");
+        });
+        socket.emit('join-group', {groupId, sender:socket.id});
 
         socket.on('receive-group-message ' + groupId , (msg) => {
             console.log('in receive group message ' + groupId + ' ' + msg.groupId);
@@ -158,12 +172,18 @@ function GroupChat(props) {
 
 
         return () => {
-            console.log('group chat component is being unmounted');
+          const d = new Date();
+          console.log(d + ': unmounting group-chat component');
             socket.removeListener('receive-group-message ' + groupId);
+            socket.removeAllListeners('disconnect');
+            socket.removeAllListeners('membership-approved');
+            socket.removeAllListeners('admin-status-granted');
+            socket.removeAllListeners('connect_error');
           }
     }, []);
 
     const clickMessageHandler = (msg) => {
+      socket.emit('join-group', {groupId, sender:socket.id});
         console.log(socket._callbacks_);
         console.log('logging: active listeners in click message handle');
         console.log(socket.listeners('receive-group-message ' + groupId));
@@ -199,11 +219,11 @@ function GroupChat(props) {
   return (
     <div className="GroupChat">
 
-        <MyNavBar state={{formValue:state?.formValue, isAdmin:adminStatus, groupId}}></MyNavBar>
+        <MyNavBar state={{formValue:state?.formValue, isAdmin:currentAdminStatus, groupId}}></MyNavBar>
         
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <Typography variant="h3" gutterBottom>
-            Welcome to {groupId}
+            {groupId}
           </Typography>
         </div>
         

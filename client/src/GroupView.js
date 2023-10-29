@@ -41,6 +41,8 @@ function GroupView(props) {
   useEffect(() => {
     const d = new Date();
     console.log(d + ': mounting view-group component');
+
+    
     const userName = sessionStorage.getItem('token');
     console.log('logging username from sessionStorage : ');
     console.log(userName);
@@ -49,6 +51,11 @@ function GroupView(props) {
       navigate('/user');
     }
 
+    if(!socket.connected) {
+      socket.auth = {username:userName};
+      socket.connect();
+      console.log('connecting with username '+ socket.auth.username);
+    }
 
     socket.on('new-group-added' , (newGroup) => {
       console.log('call back for new-group added fired');

@@ -31,6 +31,7 @@ const UserNameForm = (props) => {
 
             const parsedResult = await result.json();
             sessionStorage.setItem('token' , parsedResult['token']);
+            console.log('navigating to view-group');
             navigate('/view-group' , {state:{formValue:formValue}});
             console.log(parsedResult);
           }
@@ -48,7 +49,7 @@ const UserNameForm = (props) => {
             <Container maxWidth="sm">
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <Typography variant="h3" gutterBottom>
-            Welcome to Chat App!!
+            ChatApp
           </Typography>
         </div>
 

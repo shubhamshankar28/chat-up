@@ -85,6 +85,15 @@ io.on("connection", (socket) => {
   });
 
 
+  socket.on('join-group' , (groupMetadata) => {
+    for (let [id, socketTemp] of io.of("/").sockets) {
+      if(groupMetadata.sender === socketTemp.id) {
+        console.log(socketTemp.id + ' is joining ' + groupMetadata.groupId);
+        socketTemp.join(groupMetadata.groupId);
+      }
+    }
+  });
+
   socket.on('group-chat-message' , (msg) => {
     console.log('in group-chat-message listener');
     
@@ -92,13 +101,12 @@ io.on("connection", (socket) => {
 
     let newMessage = Message(msg)
 
-    for (let [id, socketTemp] of io.of("/").sockets) {
-
-      if(msg.sender === socketTemp.id) {
-        console.log(socketTemp.id + ' is joining ' + msg.groupId);
-        socketTemp.join(msg.groupId);
-      }
-  }
+    // for (let [id, socketTemp] of io.of("/").sockets) {
+    //   if(msg.sender === socketTemp.id) {
+    //     console.log(socketTemp.id + ' is joining ' + msg.groupId);
+    //     socketTemp.join(msg.groupId);
+    //   }
+    // }
 
     newMessage.save()
     .then(() => {
@@ -151,6 +159,14 @@ app.get('/grantMembership/:groupId/:userId' , async (request, response) => {
   console.log('in /grantMembership :');
   console.log(request.params.groupId);
   console.log(request.params.userId);
+
+  for (let [id, socketTemp] of io.of("/").sockets) {
+    console.log(socketTemp.username);
+    if(request.params.userId === socketTemp.username) {
+      console.log('socket defined for : ' + socketTemp.id + ' : ' + socketTemp.username);
+      socketTemp.emit('membership-approved' , true);
+    }
+  }
   
   const username = request.params.userId;
   const groupId = request.params.groupId;
@@ -239,6 +255,14 @@ app.post('/grantAdminRights/:groupId/:userId' , async (request,response) => {
   try {
     const newAdmin = Admin({groupId:request.params.groupId,username:request.params.userId});
     await newAdmin.save();
+
+    for (let [id, socketTemp] of io.of("/").sockets) {
+      if(request.params.userId === socketTemp.username) {
+        console.log('socket defined for : ' + socketTemp.id + ' : ' + socketTemp.username);
+        socketTemp.emit('admin-status-granted' , true);
+      }
+    }
+
     response.sendStatus(200);
   }
   catch (error) {
@@ -352,9 +376,10 @@ app.post('/groups' , async (req, res) => {
       else {
         let newGroup = new Group(req.body);
         let outcome = await newGroup.save();
+        const ids = await io.of("/").allSockets();
 
         for (let [id, socketTemp] of io.of("/").sockets) {
-            console.log('socket defined for : ' + socketTemp.id);
+            console.log('socket defined for : ' + socketTemp.id + ' : ' + socketTemp.username);
         }
 
         console.log('emitting new group added');
