@@ -1,40 +1,39 @@
-import {useState, useEffect} from 'react';
+import {useState} from 'react';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
-import Alert from '@mui/material/Alert';
 import { Container } from '@mui/material';
 import MyNavBar from './CustomNavbar';
 import {Link, useNavigate} from 'react-router-dom';
+import { useEffect} from 'react';
 import Typography from '@mui/material/Typography';
 
 
-const UserNameForm = (props) => {
+const SignUp = (props) => {
 
     const [formValue,setFormValue] = useState('');
     const [password,setPassword] = useState('');
-    const [popUp, setPopUp] = useState(false);
 
     const navigate = useNavigate();
-
-    useEffect(() => {
+    useEffect(()=> {
       const d = new Date();
       console.log('-------');
-      console.log(d + ': mounting login component');
+      console.log(d + ': mounting signup component');
       console.log('------');
 
       return () => {
         const d = new Date();
         console.log('-------');
-        console.log(d + ': unmounting login component');
+        console.log(d + ': unmounting signup component');
         console.log('------');        
       }
     }, []);
 
     const submitHandler = async (e) => {
-        e.preventDefault();
+
         try {
-            let result =  await fetch('http://localhost:8000/login', {
+            console.log('beginning post');
+            let result =  await fetch('http://localhost:8000/signup', {
               method: "POST",
               body: JSON.stringify({"username" : formValue, "password":password}),
               headers: {
@@ -43,20 +42,9 @@ const UserNameForm = (props) => {
               },
             });
 
+            console.log('navigating');
+            navigate('/user');
             console.log(result);
-            if(result.status !== 200) {
-              console.log('invalid authentication credentials !!!!')
-              setPopUp(true);
-            }
-            else {
-            const parsedResult = await result.json();
-            if(parsedResult?.status )
-            console.log('login: parsed result is ' + parsedResult);
-            sessionStorage.setItem('token' , parsedResult['token']);
-            console.log('navigating to view-group');
-            navigate('/view-group' , {state:{formValue:formValue}});
-            console.log(parsedResult);
-            }
           }
           catch(error) {
           console.log(error);
@@ -67,20 +55,26 @@ const UserNameForm = (props) => {
     return (  
         <div className="random">
 
-            <MyNavBar state={{formValue}}></MyNavBar>
+            <MyNavBar></MyNavBar>
 
             <Container maxWidth="sm">
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <Typography variant="h3" gutterBottom>
-            ChatApp
+            Welcome to Chat App
+            <br/>
           </Typography>
+          
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <Typography variant="h5" gutterBottom>
-            Login
+            Sign Up
+            <br/>
           </Typography>
+          
         </div>
+
+
 
         <br/>
         <br/>
@@ -90,13 +84,10 @@ const UserNameForm = (props) => {
                     <TextField id="outlined-basic" label="Password" type="password" value={password} onChange = {(e) => setPassword(e.target.value)}  />
                     <Button variant="contained" onClick = {submitHandler}>Enter</Button>
                 </Stack>
-
-          <br/>
-          {popUp && <Alert severity="error">Invalid authentication credentials</Alert>}
             </Container>
             
         </div>
     );
 }
  
-export default UserNameForm;
+export default SignUp;

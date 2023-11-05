@@ -7,6 +7,7 @@ import GroupView from './GroupView';
 import UserNameForm from './UserNameForm';
 import CreateGroup from './CreateGroup';
 import GroupChat from './GroupChat';
+import SignUp from './SignUp';
 import 'react-chat-elements/dist/main.css'
 import {
   createBrowserRouter,
@@ -14,13 +15,15 @@ import {
 } from "react-router-dom";
 import {groupLoader} from './GroupView';
 import {groupChatLoader} from './GroupChat';
+import ViewMembership from './ViewMembership.js';
+import {membershipLoader} from './ViewMembership.js';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <UserNameForm />,
+    element: <SignUp />,
     errorElement: <ErrorPage />
   },
   {
@@ -32,6 +35,11 @@ const router = createBrowserRouter([
     path:"/message/:groupId",
     element: <GroupChat />,
     loader: groupChatLoader
+  },
+  {
+    path:"/view-membership/:groupId",
+    element: <ViewMembership />,
+    loader: membershipLoader
   },
   {
     path:"/user",

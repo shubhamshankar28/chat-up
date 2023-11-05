@@ -1,10 +1,13 @@
 import './App.css';
 import Grid from '@mui/material/Grid';
 import {useLoaderData,useLocation,useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import MyNavBar from './CustomNavbar';
 import { ChatItem } from 'react-chat-elements';
+import socket from './socket.js';
 
 export async function groupLoader() {
+  console.log('in group loader');
 
   try {
   let response =   await fetch('http://localhost:8000/groups', {
@@ -14,8 +17,8 @@ export async function groupLoader() {
       'Content-Type': 'application/json',
     },
   });
-
   let groupList = await response.json();
+  console.log('fetched ' + groupList.length + ' messages')
   return {groupList};
   }
   catch(err) {
@@ -29,12 +32,53 @@ function GroupView(props) {
 
 
   const {groupList} = useLoaderData();
+  const [groups,setGroups] = useState(groupList);
   const location= useLocation();
   const navigate = useNavigate();
   const state=location.state;
   const defaultAvatar = 'https://flxt.tmsimg.com/assets/p8553063_b_v13_ax.jpg';
-  console.log(state);
+  
+  useEffect(() => {
+    const d = new Date();
+    console.log('-------');
+    console.log(d + ': mounting view-group component');
+    console.log('------');
+    
+    const userName = sessionStorage.getItem('token');
+    console.log('logging username from sessionStorage : ');
+    console.log(userName);
 
+    if(!userName) {
+      navigate('/user');
+    }
+
+    if(!socket.connected) {
+      socket.auth = {username:userName};
+      socket.connect();
+      console.log('connecting with username '+ socket.auth.username);
+    }
+
+    socket.on('new-group-added' , (newGroup) => {
+      console.log('call back for new-group added fired');
+      console.log(newGroup);
+      setGroups((previousGroups) => {
+        return [...previousGroups, newGroup];
+      });
+    });
+
+    console.log(d + ': logging : all event listeners');
+    console.log(socket.listeners('new-group-added'));
+
+    return () => {
+      const d = new Date();
+      console.log('-------');
+      console.log(d + ': view group component is going to be unmounted');
+      console.log('-------');
+      socket.removeAllListeners('new-group-added');
+    }
+  } , []);
+
+  console.log(state);
   console.log(groupList);
 
   const checkValidStringField = (query) => {
@@ -53,7 +97,7 @@ function GroupView(props) {
       <MyNavBar state={{formValue:state['formValue']}}></MyNavBar>
       
         <Grid container spacing={4}>
-          {groupList.map((obj, index) => {
+          {groups.map((obj, index) => {
             return <Grid item xs={12}>
                     <ChatItem title={obj.groupId} 
                     avatar = {checkValidStringField(obj.avatar) ? obj.avatar :defaultAvatar}

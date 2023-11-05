@@ -1,5 +1,5 @@
 import './App.css';
-import {useState} from 'react';
+import {useState, useEffect} from 'react';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
@@ -31,10 +31,31 @@ function CreateGroup() {
   const location = useLocation();
   const state=location.state;
 
+  useEffect(() => {
+    const d = new Date();
+    console.log('-------');
+    console.log(d + ': mounting create-group component');
+    console.log('-------');
+
+    const userName = sessionStorage.getItem('token');
+    if(userName === null) {
+      navigate('/user');
+    }
+
+    return () => {
+      const d = new Date();
+      console.log('-------');
+      console.log(d + ': unmounting create-group component');
+      console.log('-------');
+    }
+  })
+
   const handleSubmit = async (e) => {
 
       console.log("handling submit");
       try {
+      
+      // Create new group.
       let result =  await fetch('http://localhost:8000/groups', {
         method: "POST",
         body: JSON.stringify({"groupId" : dictionary.groupName, "avatar":dictionary.avatar, "purpose":dictionary.purpose}),
@@ -44,6 +65,25 @@ function CreateGroup() {
         },
       });
       console.log(result);
+      
+      // Grant current user admin rights to the new group.
+      let _ = await fetch('http://localhost:8000/grantAdminRights/' + dictionary.groupName + '/' + sessionStorage.getItem('token') , {
+        method: "POST",
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      });
+
+      // Grant current user membership to the new group.
+      _ = await fetch('http://localhost:8000/grantMembership/' + dictionary.groupName + '/' + sessionStorage.getItem('token') , {
+        method: "GET",
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      });
+
       navigate('/view-group' , {state:location.state} )
     }
     catch(error) {
@@ -60,7 +100,7 @@ function CreateGroup() {
 
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
               <Typography variant="h3" gutterBottom>
-                Add a new group
+                Create Group
               </Typography>
     </div>
 
