@@ -5,6 +5,7 @@ import Stack from '@mui/material/Stack';
 import { Container } from '@mui/material';
 import MyNavBar from './CustomNavbar';
 import {Link, useNavigate} from 'react-router-dom';
+import { useEffect} from 'react';
 import Typography from '@mui/material/Typography';
 
 
@@ -14,7 +15,19 @@ const SignUp = (props) => {
     const [password,setPassword] = useState('');
 
     const navigate = useNavigate();
+    useEffect(()=> {
+      const d = new Date();
+      console.log('-------');
+      console.log(d + ': mounting signup component');
+      console.log('------');
 
+      return () => {
+        const d = new Date();
+        console.log('-------');
+        console.log(d + ': unmounting signup component');
+        console.log('------');        
+      }
+    }, []);
 
     const submitHandler = async (e) => {
 

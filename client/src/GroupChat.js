@@ -7,12 +7,43 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import { useLoaderData, useLocation, useNavigate } from 'react-router-dom';
 import { MessageList } from 'react-chat-elements';
+import { ChatItem } from 'react-chat-elements';
 import MyNavBar from './CustomNavbar';
-import { Container } from '@mui/material';
+import { Container, Grid } from '@mui/material';
+import Paper from '@mui/material/Paper';
+import Card from '@mui/material/Card';
+import CardActions from '@mui/material/CardActions';
+import CardContent from '@mui/material/CardContent';
+
+
+async function retrieveUsers(groupId, userName) {
+  let users = await fetch('http://localhost:8000/users/' + groupId + '/' + userName, {
+    method: "GET",
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    },
+  });
+  let usersList = await users.json();
+
+
+  console.log(usersList);
+
+  if('status' in usersList) {
+    return null;
+  }
+
+  if(!usersList?.includes(userName)) {
+    usersList.push(userName);
+  }
+  console.log(usersList);
+
+  return usersList;
+}
 
 export async function groupChatLoader({params}) {
   
-  
+  console.log('group chat loader has been triggered');
   let groupId = params.groupId;
   console.log(groupId);
 
@@ -38,13 +69,20 @@ export async function groupChatLoader({params}) {
       },
     });
 
+
   
+    
     let groupChatRaw = await response.json();
     let adminStatusRaw = await adminStatus.json();
+    let usersList = await retrieveUsers(params.groupId, userName);
 
-
+    console.log('loading raw group chat');
     console.log(groupChatRaw);
+    console.log('loading admins status');
     console.log(adminStatusRaw);
+    console.log('loading users ');
+    console.log(usersList);
+
     if(('status' in groupChatRaw) && (groupChatRaw['status'] === 'user is not a member of group')) {
       return {groupChatList : [] , groupId, status : '400', adminStatusRaw}
     }
@@ -59,7 +97,7 @@ export async function groupChatLoader({params}) {
       }
     });
 
-    return {groupChatList, groupId, status : '200', adminStatus:adminStatusRaw['adminStatus']};
+    return {groupChatList, groupId, status : '200', adminStatus:adminStatusRaw['adminStatus'], usersList};
     }
     catch(err) {
       console.log(err);
@@ -68,22 +106,21 @@ export async function groupChatLoader({params}) {
     }
 }
 
+
 function GroupChat(props) {
 
-  const {groupChatList, groupId,status, adminStatus} = useLoaderData();
+  const {groupChatList, groupId,status, adminStatus, usersList} = useLoaderData();
 
-  console.log(adminStatus)
   const location = useLocation();
   const state=location.state;
 
   const [messageList, setMessageList] = useState(amend(groupChatList));
+  const [userList, setUserList] = useState(usersList);
   const [message, setMessage] = useState('');
   const [isMember, setIsMember] = useState(false);
   const [currentAdminStatus, setCurrentAdminStatus] = useState(adminStatus);
 
   const navigate = useNavigate();
-
-  console.log(state);
 
   function amend(groupChatList) {
     return [].concat(groupChatList.map((msg) => {
@@ -93,37 +130,26 @@ function GroupChat(props) {
     }));
   }
 
-  
-  if(state === null) {
 
-    navigate('/user');
-  }
   
   useEffect(() => {
 
     const d = new Date();
+    console.log('-------');
     console.log(d + ': mounting group-chat component');
+    console.log('------');
 
         if(status === '400') {
+          console.log('current user is not a member');
           setIsMember(false);
           return;
         }
         setIsMember(true);
-        console.log(state);
-        console.log(state['formValue']);
-        if(state === null) {
-          console.log(state['formValue']);
-          navigate('/user');
-        }
 
         let userName = sessionStorage.getItem('token');
         if(userName === null) {
           navigate('/user');
         }
-
-
-        console.log(state['formValue']);
-        console.log(state);
 
 
         if(!socket.connected) {
@@ -149,7 +175,9 @@ function GroupChat(props) {
         socket.on("disconnect" , (reason) => {
             console.log("socket connection has been disconnected on the client side");
         });
-        socket.emit('join-group', {groupId, sender:socket.id});
+
+        socket.emit('join-group', {groupId, sender:socket.id, credential:userName});
+
 
         socket.on('receive-group-message ' + groupId , (msg) => {
             console.log('in receive group message ' + groupId + ' ' + msg.groupId);
@@ -167,23 +195,66 @@ function GroupChat(props) {
             setMessageList(list => [...list, message]);
         }
         });
+
+        socket.on('new-user-added ' + groupId , (msg) => {
+          if(msg.username === undefined) {
+            return;
+          }
+          console.log('new-user-added ' + groupId + ' ' + msg.username);
+
+          if(groupId ===  msg.groupId) {
+          console.log('in new-user-added '  + groupId);
+          // console.log(messageList);
+        
+          
+         
+          setUserList(list => {
+
+            if(!list?.includes(msg.username))
+            return [...list, msg.username]
+          else
+            return list;
+          });
+      }
+      });
+
+      socket.on('user-removed '+ groupId , (msg) => {
+        if(msg.groupId === groupId) {
+          console.log(msg.credential + ' is leaving ' + msg.groupId);
+          setUserList(list => {
+            let newList = [].concat(list.filter((element) => {
+              return (element !== msg.credential);
+            }));
+            return newList;
+          });
+        }
+      });
+
+
         console.log('logging : all event listeners');
         console.log(socket.listeners('receive-group-message ' + groupId));
 
+        retrieveUsers(groupId, userName).then((connectedUserList) => {
+          setUserList(connectedUserList);
+        });
+        
 
         return () => {
           const d = new Date();
+          console.log('-------');
           console.log(d + ': unmounting group-chat component');
+          console.log('------');
             socket.removeListener('receive-group-message ' + groupId);
             socket.removeAllListeners('disconnect');
             socket.removeAllListeners('membership-approved');
             socket.removeAllListeners('admin-status-granted');
             socket.removeAllListeners('connect_error');
+            socket.removeAllListeners('new-user-added ' + groupId);
           }
     }, []);
 
     const clickMessageHandler = (msg) => {
-      socket.emit('join-group', {groupId, sender:socket.id});
+      // socket.emit('join-group', {groupId, sender:socket.id});
         console.log(socket._callbacks_);
         console.log('logging: active listeners in click message handle');
         console.log(socket.listeners('receive-group-message ' + groupId));
@@ -221,14 +292,15 @@ function GroupChat(props) {
 
         <MyNavBar state={{formValue:state?.formValue, isAdmin:currentAdminStatus, groupId}}></MyNavBar>
         
+        {!isMember && 
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <Typography variant="h3" gutterBottom>
             {groupId}
           </Typography>
+          <br/>
+        <br/>
         </div>
-        
-        <br/>
-        <br/>
+        }
 
         {!isMember && 
             <div className="userNotFound">
@@ -243,7 +315,62 @@ function GroupChat(props) {
             </div>
         }
 
-        {isMember && <div className="groupChatMessage">
+        {isMember && <Grid container spacing={2}>
+        <Grid item xs={2}>
+          <br/>
+        <Typography variant="h4">
+            Active Users
+            </Typography>
+        </Grid>
+
+<Grid item xs={10}>
+  <br/>
+<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <Typography variant="h3" gutterBottom>
+            {groupId}
+          </Typography>
+        </div>
+</Grid>
+
+          <Grid item xs={2}>
+          {
+            userList?.map((username,index) => {
+              return <><Card key={index} variant='outlined' sx={{marginBottom:1,marginLeft:1,marginRight:1}}>
+                <CardContent>
+                  <Typography sx={{fontSize:14}} color="text.primary">
+                    {username}
+                  </Typography>
+                </CardContent>
+              </Card>
+              </>
+            })
+          }
+        </Grid>
+
+        <Grid item xs={10}>
+          <MessageList
+                className="messageList"
+                lockable={true}
+                toBottomHeight={"100%"}
+                dataSource={messageList}
+            />
+            <br/>
+            <br/>
+            <br/>
+            <Container maxWidth="sm">
+              <Stack direction="row" spacing={2}>
+                      <TextField id="outlined-basic" 
+                      label="Enter message" 
+                      value={message} 
+                      onChange = {changeMessageHandler} 
+                      fullWidth />
+                      <Button variant="contained" onClick = {clickMessageHandler}>Enter</Button>
+              </Stack>
+        </Container>
+        </Grid>
+        </Grid>}
+
+        {/* {isMember && <div className="groupChatMessage">
           <MessageList
               className="messageList"
               lockable={true}
@@ -267,7 +394,7 @@ function GroupChat(props) {
                     <Button variant="contained" onClick = {clickMessageHandler}>Enter</Button>
             </Stack>
       </Container>
-        } 
+        }  */}
     </div>
   );
 }

@@ -40,8 +40,9 @@ function GroupView(props) {
   
   useEffect(() => {
     const d = new Date();
+    console.log('-------');
     console.log(d + ': mounting view-group component');
-
+    console.log('------');
     
     const userName = sessionStorage.getItem('token');
     console.log('logging username from sessionStorage : ');
@@ -70,7 +71,9 @@ function GroupView(props) {
 
     return () => {
       const d = new Date();
+      console.log('-------');
       console.log(d + ': view group component is going to be unmounted');
+      console.log('-------');
       socket.removeAllListeners('new-group-added');
     }
   } , []);

@@ -59,7 +59,17 @@ function ViewMembership(props) {
     const [existingMembersList,setExistingMembersList] = useState(existingMembers)
   
     useEffect(() => {
+      const d = new Date();
+      console.log('-------');
+      console.log(d + ': mounting view-membership component');
+      console.log('-------');
 
+      return () => {
+        const d = new Date();
+        console.log('-------');
+        console.log(d + ': unmounting view-membership component');
+        console.log('-------');
+      }
     }, []);
 
     const clickAcceptRequestHandler = async (userId) => {
