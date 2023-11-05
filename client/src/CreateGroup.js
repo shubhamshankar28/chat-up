@@ -32,9 +32,21 @@ function CreateGroup() {
   const state=location.state;
 
   useEffect(() => {
+    const d = new Date();
+    console.log('-------');
+    console.log(d + ': mounting create-group component');
+    console.log('-------');
+
     const userName = sessionStorage.getItem('token');
     if(userName === null) {
       navigate('/user');
+    }
+
+    return () => {
+      const d = new Date();
+      console.log('-------');
+      console.log(d + ': unmounting create-group component');
+      console.log('-------');
     }
   })
 
@@ -88,7 +100,7 @@ function CreateGroup() {
 
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
               <Typography variant="h3" gutterBottom>
-                Add a new group
+                Create Group
               </Typography>
     </div>
 
