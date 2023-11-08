@@ -330,28 +330,28 @@ function GroupChat(props) {
 
         {isMember && 
         <Grid container spacing={2}>
-        <Grid item xs={2}>
+        <Grid item xs={2} sx={{background:"#2f2d52"}}>
           <br/>
-        <Typography variant="h4">
+        <Typography variant="h4" sx={{color:"#fff"}}>
             Active Users
             </Typography>
         </Grid>
 
-<Grid item xs={10}>
+<Grid item xs={10} sx={{background:"#3e3c61"}}>
   <br/>
-<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', color:"#fff"}}>
           <Typography variant="h3" gutterBottom>
             {groupId}
           </Typography>
         </div>
 </Grid>
 
-          <Grid item xs={2}>
+          <Grid item xs={2} sx={{background:"#3e3c61"}}>
           {
             userList?.map((username,index) => {
-              return <><Card key={index} variant='outlined' sx={{marginBottom:1,marginLeft:1,marginRight:1}}>
+              return <><Card key={index}  sx={{marginBottom:1,marginLeft:1,marginRight:1,backgroundColor:"#3e3c61"}}>
                 <CardContent>
-                  <Typography sx={{fontSize:14}} color="text.primary">
+                  <Typography sx={{fontSize:14, color:"#fff"}}>
                     {username}
                   </Typography>
                 </CardContent>
@@ -361,7 +361,7 @@ function GroupChat(props) {
           }
         </Grid>
 
-        <Grid item xs={10}>
+        <Grid item xs={10} sx={{background:"#a7bcff"}}>
           <div className='messagesWrapper'>
           <MessageList
                 className="messageList"
@@ -375,13 +375,14 @@ function GroupChat(props) {
             
             <div ref={messagesEndRef} />
             </div>
-            <Container maxWidth="sm">
+            <Container maxWidth="sm" sx={{marginBottom:"5px"}}>
               <Stack direction="row" spacing={2}>
                       <TextField id="outlined-basic" 
                       label="Enter message" 
                       value={message} 
                       onChange = {changeMessageHandler} 
-                      fullWidth />
+                      fullWidth
+                      sx={{background:"#fff"}} />
                       <Button variant="contained" onClick = {clickMessageHandler}>Enter</Button>
               </Stack>
         </Container>
