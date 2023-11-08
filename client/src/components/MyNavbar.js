@@ -1,8 +1,9 @@
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 import {Link} from 'react-router-dom';
-import {useState, useEffect} from 'react';
-import socket from './socket.js';
+import {useState, useEffect, React} from 'react';
+import socket from '../socket.js';
+import PropTypes from 'prop-types'; 
 
 const MyNavBar = (props) => {
   // console.log(props.state?.isAdmin);
@@ -59,6 +60,10 @@ const MyNavBar = (props) => {
       </Navbar>
     </div>
   );
+}
+
+MyNavBar.propTypes = {
+  state:PropTypes.any
 }
 
 export default MyNavBar;
