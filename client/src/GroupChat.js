@@ -1,5 +1,5 @@
 import './App.css';
-import {useState, useEffect} from 'react';
+import {useState, useEffect, useRef} from 'react';
 import socket from './socket.js';
 import TextField from '@mui/material/TextField';
 import Stack from '@mui/material/Stack';
@@ -14,6 +14,7 @@ import Paper from '@mui/material/Paper';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
+import "./groupChatStyles.css";
 
 
 async function retrieveUsers(groupId, userName) {
@@ -119,9 +120,15 @@ function GroupChat(props) {
   const [message, setMessage] = useState('');
   const [isMember, setIsMember] = useState(false);
   const [currentAdminStatus, setCurrentAdminStatus] = useState(adminStatus);
+  const [mounted, setMounted] = useState(true);
 
   const navigate = useNavigate();
+  const messagesEndRef = useRef(null)
 
+  const scrollBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }
+ 
   function amend(groupChatList) {
     return [].concat(groupChatList.map((msg) => {
       let newMessage = msg;
@@ -154,7 +161,6 @@ function GroupChat(props) {
 
         if(!socket.connected) {
           socket.auth = {username:userName};
-          socket.connect();
           console.log('connecting with username '+ socket.auth.username);
         }
 
@@ -193,6 +199,8 @@ function GroupChat(props) {
             };
             // console.log(messageList);
             setMessageList(list => [...list, message]);
+            console.log('scrolling to the bottom');
+            scrollBottom();
         }
         });
 
@@ -235,8 +243,12 @@ function GroupChat(props) {
         console.log(socket.listeners('receive-group-message ' + groupId));
 
         retrieveUsers(groupId, userName).then((connectedUserList) => {
+          scrollBottom();
           setUserList(connectedUserList);
+          
         });
+        
+        console.log('scrolling to the bottom at mount');
         
 
         return () => {
@@ -254,6 +266,8 @@ function GroupChat(props) {
     }, []);
 
     const clickMessageHandler = (msg) => {
+      let userName = sessionStorage.getItem('token');
+      socket.emit('join-group', {groupId, sender:socket.id, credential:userName});
       // socket.emit('join-group', {groupId, sender:socket.id});
         console.log(socket._callbacks_);
         console.log('logging: active listeners in click message handle');
@@ -288,8 +302,7 @@ function GroupChat(props) {
 
 
   return (
-    <div className="GroupChat">
-
+    <div>
         <MyNavBar state={{formValue:state?.formValue, isAdmin:currentAdminStatus, groupId}}></MyNavBar>
         
         {!isMember && 
@@ -315,7 +328,8 @@ function GroupChat(props) {
             </div>
         }
 
-        {isMember && <Grid container spacing={2}>
+        {isMember && 
+        <Grid container spacing={2}>
         <Grid item xs={2}>
           <br/>
         <Typography variant="h4">
@@ -348,6 +362,7 @@ function GroupChat(props) {
         </Grid>
 
         <Grid item xs={10}>
+          <div className='messagesWrapper'>
           <MessageList
                 className="messageList"
                 lockable={true}
@@ -357,6 +372,9 @@ function GroupChat(props) {
             <br/>
             <br/>
             <br/>
+            
+            <div ref={messagesEndRef} />
+            </div>
             <Container maxWidth="sm">
               <Stack direction="row" spacing={2}>
                       <TextField id="outlined-basic" 
@@ -367,34 +385,9 @@ function GroupChat(props) {
                       <Button variant="contained" onClick = {clickMessageHandler}>Enter</Button>
               </Stack>
         </Container>
+
         </Grid>
         </Grid>}
-
-        {/* {isMember && <div className="groupChatMessage">
-          <MessageList
-              className="messageList"
-              lockable={true}
-              toBottomHeight={"100%"}
-              dataSource={messageList}
-          />
-          <br/>
-        </div> }
-
-        {isMember && <br/>}
-        {isMember && <br/>}
-
-        
-        {isMember && <Container maxWidth="sm">
-            <Stack direction="row" spacing={2}>
-                    <TextField id="outlined-basic" 
-                    label="Enter message" 
-                    value={message} 
-                    onChange = {changeMessageHandler} 
-                    fullWidth />
-                    <Button variant="contained" onClick = {clickMessageHandler}>Enter</Button>
-            </Stack>
-      </Container>
-        }  */}
     </div>
   );
 }
